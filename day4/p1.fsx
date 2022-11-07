@@ -54,11 +54,20 @@ let cal (board: int[] list, best_score: int, best_dist: int) =
                 (([]: int[] list),new_score * last_call, last_idx) 
     | _ -> failwith "invalid board"
 
-let play (board: int[] list, best_score: int, best_dist: int) (row: int[])=
+let play (board: int[] list, best_score: int, best_dist: int) (row: int[] option)=
     match row with
-    | [||] -> cal (board, best_score, best_dist) //complete reading in a board
-    | r -> (board @ [r], best_score, best_dist) //constructing a board
+    | None -> cal (board, best_score, best_dist) //complete reading in a board
+    | Some(r) -> (board @ [r], best_score, best_dist) //constructing a board
 
-boards 
-|> Seq.map(fun s-> s.Split(" ") |> Array.map int)
-|> Seq.fold play (board,0, draws_array.Length)
+let (_, score, _) = 
+    boards 
+    |> Seq.map(fun s-> 
+        match s with
+        | "" -> None
+        | _ -> 
+            let row =s.Split(" ") |> Array.filter(fun (i) -> not ( String.IsNullOrEmpty(i))) |> Array.map int 
+            //printfn ("%s %i") s row.Length
+            Some(row))
+    |> Seq.fold play (board,0, draws_array.Length)
+
+printfn "%i" score
