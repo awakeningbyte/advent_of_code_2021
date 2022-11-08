@@ -10,6 +10,10 @@ inputs
         | [|a;b; c; d|] when (b = d) && (a <= c)-> [|for i in a..c do (i, b)|]
         | [|a;b; c; d|] when (a = c) -> [|for i in d..b do (a, i)|]
         | [|a;b; c; d|] when (b = d) -> [|for i in c..a do (i, b)|]
+        | [|a;b; c; d|] when ((a - c) = (b - d)) && a < c -> [|for i in 0..(c-a) do (a+i, b+i)|]
+        | [|a;b; c; d|] when ((a - c) = (d - b)) && a < c -> [|for i in 0..(c-a) do (a+i, b-i)|]
+        | [|a;b; c; d|] when ((a - c) = (b - d)) -> [|for i in 0..(a-c) do (c+i, d+i)|]
+        | [|a;b; c; d|] when ((a - c) = (d - b)) -> [|for i in 0..(a-c) do (c+i, d-i)|]
         | _ -> [||])
 // |> Array.iter(fun i -> i  |> Array.iter(fun (x,y)-> printfn"%i:%i " x y))
 |> Array.collect( fun a -> a)
