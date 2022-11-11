@@ -1,26 +1,52 @@
 open System
 open System.Collections.Generic
 
-let inputs=IO.File.ReadAllLines("input.txt")
+let inputs=IO.File.ReadAllLines("test.txt")
 
-let unique (patterns: string[]) = 
-    patterns
-    |> Array.map(fun p -> 
-        match p.Length with
-        | 2 | 3 |4 |7 -> 1
-        | _ -> 0)
-    |> Array.sum
+let analyze ((patterns:list<char>[]),(outputs:list<char>[])) =
+    let m: Dictionary<int, Set<char>> = new Dictionary<int,Set<char>>()
+    let x = 
+        patterns 
+        |> Seq.sortBy(fun p ->p.Length) 
+        |> Seq.map(fun i -> Set.ofList i) 
+        |> Array.ofSeq
 
-let analyze ((patterns:Set<char>[]),(outputs:Set<char>[])) =
-    let m = new Dictionary<int,list<char>>()
-    let x = (Set.difference patterns[1]  patterns[0]) |> Set.toArray
-    m.Add(1, [x.[0]])
-    //m
+    m.Add(1, x.[0])
+    m.Add(7, x.[1])
+    m.Add(4, x.[2])
+    m.Add(8, x.[9])
+    let n3= [|x.[3];x.[4];x.[5]|]|> Array.find(fun d -> (Set.difference d (d + m.[1])).IsEmpty)
+    m.Add(3, n3)
+    let n9 = m.[4]+m.[3]
+    m.Add(9, n9)
+    let l2 = m.[8] - m.[9]
 
+    let n2= [|x.[3];x.[4];x.[5]|]|> Array.find(fun d -> (Set.difference d (d + l2)).IsEmpty)
+    m.Add(2, n2)
+
+    let n5= [|x.[3];x.[4];x.[5]|]|> Array.find(fun d -> d <> m.[2] && d <> m.[3])
+    m.Add(5, n5)
+
+    let n6 = n5 + l2
+    m.Add(6, n6)
+
+    let n0= [|x.[6];x.[7];x.[8]|]|> Array.find(fun d -> d <> m.[6] && d <> m.[9])
+    m.Add(0, n0)
+
+    let rm = 
+        m
+            |> Seq.map(fun p -> (p.Value, p.Key))
+            |> Map.ofSeq
+
+    outputs 
+        |> Seq.map(fun i -> Set.ofList i) 
+        |> Seq.map(fun s -> rm.[s])
+        |> Seq.fold(fun acc i -> acc * 10 + i) 0
+        |> printfn "%i"
 let setEach (a:string[]) =
     a
-    |> Array.map(fun i -> i.ToCharArray() |> Set.ofArray)
-
+    |> Array.map(fun i -> i.ToCharArray() |> Array.sort |>List.ofArray)
+    
 inputs
 |> Array.map(fun line -> line.Split(" | "))
 |> Array.map(fun parts ->
