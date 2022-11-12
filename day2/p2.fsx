@@ -1,6 +1,5 @@
 open System
 
-
 type Instruction = 
     |UP of int
     |DOWN of int
