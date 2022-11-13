@@ -81,15 +81,16 @@ let rec spread (g: Point[][], ns) =
   | _ -> spread (g, flashs)
   
 // let (g, f) = run grid 
-[1..100] 
+[1..1000] 
 |> Seq.fold (
-    fun (acc,c) _ -> 
+    fun (acc,c) r -> 
       let g1 = run acc |> spread 
       let c1 =
         g1
         |> Seq.map ( fun g ->  g |> Seq.filter (fun i -> i.E = 0)|> Seq.length)
         |> Seq.sum
-
+      if (c1) = sizeX * sizeY then
+        printfn "p2: %i: %i" r (c1)
       (g1, c+c1)
     ) (grid, 0)
 |> fun (_, c) -> printfn "%i" c
