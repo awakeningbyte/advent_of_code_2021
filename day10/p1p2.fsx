@@ -28,6 +28,8 @@ let chunks =
       i.ToCharArray() |> List.ofArray
     )
   |> Array.map(fun a -> (check a []))
+
+chunks
   |> Array.map(fun (h, _) -> 
     match h with
     | Some(x) ->
@@ -40,9 +42,25 @@ let chunks =
     | None -> 0
   )
   |> Array.sum
-  |> printfn "%i"
-  // |> Array.iter (fun (i, _) -> 
-  //   match i with
-  //   | Some(x) -> (printfn "%c" x)
-  //   | None -> ()
-  // )
+  |> printfn "p1: %i"
+
+chunks
+  |> Array.filter (fun (h, _) -> h.IsNone)
+  |> Array.map(fun (_, left) -> 
+    // printf "%A\n" left
+    left 
+    |> Seq.fold(fun acc i->
+      let r = 
+        match i with
+        | '(' -> 1L
+        | '[' -> 2L
+        | '{' -> 3L
+        | '<' -> 4L
+        | _ -> failwithf "invalid input %c" i
+      r + acc * 5L
+    ) 0L
+  )
+  |> Array.sort
+  |> fun a->
+    let l = a.Length / 2
+    printfn "p2: %i" a.[l]
