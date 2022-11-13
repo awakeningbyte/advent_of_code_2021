@@ -3,7 +3,6 @@ open System.Collections.Generic
 let inputs = IO.File.ReadAllLines("input.txt")
 
 let sizeX = inputs.[0].Length
-let sizeY = inputs.Length
 
 type Position = 
   {x: int; y:int;}
@@ -22,7 +21,7 @@ let mem = new Dictionary<Position,Link>()
 //build init grid
 let grid =
   [0..(inputs.Length - 1)]
-  |> Seq.map(fun i ->
+  |> List.map(fun i ->
     let line = inputs.[i]
     let numbers = line.ToCharArray()
     [0..numbers.Length - 1] 
@@ -32,19 +31,28 @@ let grid =
       { n = numbers[x]; low = true; position = p}
     ))
 
-let makeLink o m =
+let makeLink2 o m =
   match o with
-    | {n = '9'; low = _ ; position = _ } | {n = 'A' ; low = _; position = _ } ->  ()
-    | {n = _; low = _; position = p} when o.n > m.n->
-        let linkO = mem.[o.position]
-        mem.[o.position] <- {linkO with towards = Some(m.position)}
+    | {n = '9'; low = _ ; position = _ } -> ()
+    | {n = 'A' ; low = _; position = _ } -> ()
+    | {n = _; low = _; position = p} when o.n > m.n ->
         let linkM = mem.[m.position]
-        mem.[m.position] <- {linkM with incomings = linkM.incomings.Add(o.position)}
+        match linkM.towards with
+        | Some(p) -> ()
+        | None ->
+          let linkO = mem.[o.position]
+          mem.[o.position] <- {linkO with towards = Some(m.position)}
+          mem.[m.position] <- {linkM with incomings = linkM.incomings.Add(o.position)}
     | {n = _; low = _; position = p} when o.n < m.n-> 
         let linkO = mem.[o.position]
-        mem.[o.position] <- {linkO with incomings = linkO.incomings.Add(m.position)}
         let linkM = mem.[m.position]
-        mem.[m.position] <- {linkM with towards = Some(o.position)}
+        match linkM.towards with
+        | Some(p) -> 
+          ()
+        | None ->
+          mem.[o.position] <- {linkO with incomings = linkO.incomings.Add(m.position)}
+          let linkM = mem.[m.position]
+          mem.[m.position] <- {linkM with towards = Some(o.position)}
     | _ -> ()
         
 let takeLine line = 
@@ -60,8 +68,8 @@ let takeLine line =
           | {n = 'A' ; low = _; position = _ } -> false
           | {n = value; low = false; position = p} -> failwith "initial value should be true"
           | {n = value; low = _ ; position = p} ->
-            makeLink l m
-            makeLink r m
+            makeLink2 l m
+            makeLink2 r m
             l.n > m.n && r.n > m.n
 
         { m with low = isLow}
@@ -83,18 +91,49 @@ let paddedY =
   |> Array.map (fun lines ->
       match lines with
       | [|t; m; b;|] ->
-        // m |> Array.map(f)    printfn "%c %b;" m.n (l.n > m.n && r.n > m.n)
-        Seq.map3 (fun tv mb bn -> {mb with low = (mb.low && (tv.n > mb.n) && (bn.n > mb.n))}) t m b
+        Seq.map3 (fun tv mb bn -> 
+          let isLow = 
+            match mb with
+            | {n = '9'; low = _ ; position = _ } -> false
+            | {n = 'A' ; low = _; position = _ } -> false
+            | {n = value; low = _ ; position = p} ->
+              makeLink2 tv mb
+              makeLink2 bn mb
+              
+              (mb.low && (tv.n > mb.n) && (bn.n > mb.n))
+
+          {mb with low = isLow }) t m b
+
       | _ -> failwith "invalid inputs"
     )
+|> Array.map Array.ofSeq
 
-paddedY
-|> Seq.map(fun (line: seq<Point>) -> 
-    line
+let rec collectPostions (p: Position) =
+  let incomingsSet = mem.[p].incomings
+  
+  let sets = 
+    match incomingsSet with
+    | _ when incomingsSet.IsEmpty -> seq {p}
+    | incomings ->  
+      seq { p; yield! incomings |> Seq.collect(fun (i: Position) -> collectPostions i) }
+  sets
+
+let a = 
+    Array.ofSeq paddedY
+    |> Array.collect(fun line -> line)
     |> Seq.filter( fun i -> i.low )
-    |> Seq.sumBy( fun i -> 
-      // printfn "- y: %c" i.n
-      (int i.n) - (int '0') + 1)
-    )
-|> Seq.sum
-|> printfn "%i"
+    |> Array.ofSeq
+    |> Array.map (fun l ->
+        // printfn "!%c" l.n
+        (collectPostions l.position) 
+        // |> Seq.map(fun c -> 
+        //   printfn "%c: (y:%i,x%i) %A" grid.[c.y].[c.x].n c.y c.x mem.[c]
+        //   c
+        // )
+        |> Set.ofSeq
+        |> Seq.length
+        )
+      // |> Seq.sum)
+      |> Seq.sortDescending
+  
+a |> Seq.take(3) |> Seq.reduce(fun acc i -> acc * i) |> (printfn "%i")
