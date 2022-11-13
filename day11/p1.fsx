@@ -1,5 +1,5 @@
 open System
-let inputs = IO.File.ReadAllLines("test.txt")
+let inputs = IO.File.ReadAllLines("input.txt")
 
 let sizeX = inputs.[0].Length
 let sizeY = inputs.Length
@@ -81,19 +81,15 @@ let rec spread (g: Point[][], ns) =
   | _ -> spread (g, flashs)
   
 // let (g, f) = run grid 
-[1..10] 
-|> Seq.fold (fun acc _ -> run acc |> spread ) grid
-|> Seq.map ( fun g ->  g |> Seq.filter (fun i -> i.E = 0)|> Seq.length)
-|> Seq.sum
-|> printfn "%i"
+[1..100] 
+|> Seq.fold (
+    fun (acc,c) _ -> 
+      let g1 = run acc |> spread 
+      let c1 =
+        g1
+        |> Seq.map ( fun g ->  g |> Seq.filter (fun i -> i.E = 0)|> Seq.length)
+        |> Seq.sum
 
-
-// printf "%A" f
-// printf "%A\n" g[1]
-// printf "%A\n" g[1]
-// printf "%A\n" g[2]
-// printf "%A\n" g[3]
-// printf "%A\n" g[4]
-
-// [1..100]
-// |> Seq.fold (fun acc _ -> run acc |> spread ) grid
+      (g1, c+c1)
+    ) (grid, 0)
+|> fun (_, c) -> printfn "%i" c
