@@ -28,10 +28,12 @@ let rec bfs que =
   |[]  -> ()
   | "end" :: tail -> bfs tail
   | h::tail ->
-    // printf "deque %s\n" h
+    // printf "deque %s\n %A \n" h graph[h]
     let toAdd =
       graph[h] //linked nodes
       |> Seq.filter(fun (_, linked) -> // remove visited
+          // if h = "d" then
+          //  printfn "!!!!!!! %s -> %s %A " h linked visited.[linked]
           let (b, _) = visited.[linked]
           not b
       ) //filter all visited
@@ -43,16 +45,19 @@ let rec bfs que =
         match linked with
         | "end" -> 
           visited.[linked] <- (false, Set.ofSeq trace1) 
-          // printfn "%s -> %s %A " h "end" visited.[linked]
+          printfn "%s -> %s %A " h "end" visited.[linked]
         | x when ("A" <= x) && ("Z" >= x) -> 
           visited.[linked] <- (false, Set.ofSeq  trace1) 
-          // printfn "%s -> %s %A " h x visited.[linked]
+          printfn "%s -> %s %A " h x visited.[linked]
         | z when ("a" <= z) && ("z" >= z) -> 
           visited.[linked] <- (true, Set.ofSeq  trace1) 
-          // printfn "%s -> %s %A " h z visited.[linked]
+          printfn "%s -> %s %A " h z visited.[linked]
         | _ -> failwith "invalid input"
         |> ignore
-
+        // if h  = "d" then
+        //   printfn "\t\t!!!!%A" linked
+        // if h = "A" then
+        //     printfn "%s -> %s %A " h linked visited.[linked]
         linked
       )
  
@@ -76,7 +81,7 @@ let rec BackTrace node (upstream: list<string>) =
           )
       )
  
-// printfn "%A" visited.["end"]
+printfn "\nb uppstream %A" visited.["b"]
 BackTrace "end" []
 |> Seq.iter (fun x -> 
     printfn "%A" x
