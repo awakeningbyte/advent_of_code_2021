@@ -19,6 +19,9 @@ let visited  =
   graph
   |> Seq.map(fun p -> (p.Key, (false, Seq.empty<string>)))
   |> dict
+  |> Dictionary
+
+visited.Add("end", (true, Seq.empty<string>))
 
 let rec bfs que =
   match que with
@@ -35,13 +38,16 @@ let rec bfs que =
         let (_, tr) = visited.[linked]
         // let trace = tr
         let trace1 = seq { yield! tr; h }
-        let mark =
-          match h with
-          | "start" | "end" -> true
-          | x when ("A" <= x) && ("Z" >= x) -> false
-          | z when ("a" <= z) && ("z" >= z) -> true
-          | _ -> failwith "invalid input"
-        visited.[linked] <- (mark, trace1) //mark visit
+        
+        match h with
+        | "end" -> 
+          visited.[linked] <- (true, trace1) 
+        | x when ("A" <= x) && ("Z" >= x) -> 
+          visited.[linked] <- (false, trace1) 
+        | z when ("a" <= z) && ("z" >= z) -> 
+          visited.[linked] <- (true, trace1) 
+        | _ -> failwith "invalid input"
+        |> ignore
         linked
       )
  
