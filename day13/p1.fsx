@@ -26,10 +26,9 @@ let (|FoldY|_|) (str: string) =
             if y = f then
                 None
             else
-                (Some(x, (2*f - y)))
+                (Some((x, (2*f - y))))
         Some(fx)
     | _ -> None
-
 
 inputs
 |> Seq.fold(fun (points: list<(int * int)> , folds) line -> 
@@ -39,3 +38,14 @@ inputs
     | FoldY p -> (points, [p; yield! folds])
     | _ -> (points, folds)
 ) ([], [])
+|> fun (points, folds) ->
+    folds
+    |> Seq.fold(fun acc op ->
+        acc
+        |>  Seq.map op
+        |> Seq.filter(fun p -> p.IsSome)
+        |> Seq.map(fun p -> p.Value)
+    ) points
+|> Set.ofSeq
+|> Seq.length
+|> printfn "%i"
