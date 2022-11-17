@@ -22,6 +22,7 @@ let (template, inserts) =
 let lookup = inserts |> dict
 let mem = new Dictionary<char,int64>()
 
+//build the count mem
 template
 |> Seq.groupBy(fun c -> c)
 |> Seq.map( fun (c,sq )-> (c, Seq.length sq))
@@ -29,23 +30,25 @@ template
 |> ignore
 
 let rec proc h t =
+    if Seq.isEmpty h then
+        printfn ("\t%A") (Seq.length t)
     match t with
     | x::y::tail when (lookup.ContainsKey (x,y)) ->
-        let r = [y; yield! tail] 
         let toAdd = lookup[(x,y)]
         if mem.ContainsKey(toAdd) then
             let org = mem.[toAdd]
             mem.[toAdd] <- (org + 1L)
         else
             mem.Add(toAdd, 1L)
-        proc ([yield! h;x;lookup[(x,y)]]) r
+    
+        proc ([yield! h;x;toAdd]) [y; yield! tail]
     | x::y::tail -> 
-        proc ([yield! h;x]) [y; yield! tail]
+        proc h [y; yield! tail]
     | [x] -> 
         [yield! h;x] 
     | [] -> h 
 
-[1..40]
+[1..10]
 |> Seq.fold (fun tp _ ->
     proc List.empty<char> (List.ofSeq tp)
 )  (List.ofArray template)
@@ -54,25 +57,3 @@ let m = mem.Values|> Seq.max
 let s = mem.Values|> Seq.min
 
 printfn "%A" (m - s)
-// [1..40]
-// |> Seq.fold ( fun st _ -> proc st ) (List.empty<char>, (List.ofSeq template))
-
-
-// |> Array.ofSeq
-// |> String
-// |> printfn "%s"
-// let proc template
-// [1..40]
-// |> Seq.fold(fun t _ ->proc t) template
-// |> Seq.toArray
-// // |> Seq.groupBy(fun c -> c)
-// // |> Seq.sortBy(fun (c,g) -> Seq.length g)
-// // |> fun result ->
-// //     let (_, l) = result |> Seq.maxBy( fun (_,g) -> Seq.length g)
-// //     let (_, s) = result |> Seq.minBy( fun (_,g) -> Seq.length g)
-// //     (Seq.length l) - (Seq.length s)
-// |> printfn ("done %A")
-
-
-// // |> String
-// // |> printfn "%s"
