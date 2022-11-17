@@ -31,16 +31,16 @@ let proc tplt =
     ) 
     |> Seq.collect(fun s -> s)
 
-[1..10]
+[1..40]
 |> Seq.fold(fun t _ ->proc t) template
 |> Seq.toArray
-|> Seq.groupBy(fun c -> c)
-|> Seq.sortBy(fun (c,g) -> Seq.length g)
-|> fun result ->
-    let (_, l) = result |> Seq.maxBy( fun (_,g) -> Seq.length g)
-    let (_, s) = result |> Seq.minBy( fun (_,g) -> Seq.length g)
-    (Seq.length l) - (Seq.length s)
-|> printfn("%i")
+// |> Seq.groupBy(fun c -> c)
+// |> Seq.sortBy(fun (c,g) -> Seq.length g)
+// |> fun result ->
+//     let (_, l) = result |> Seq.maxBy( fun (_,g) -> Seq.length g)
+//     let (_, s) = result |> Seq.minBy( fun (_,g) -> Seq.length g)
+//     (Seq.length l) - (Seq.length s)
+|> printfn ("done %A")
 
 
 // |> String
