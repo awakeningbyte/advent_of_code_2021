@@ -1,6 +1,6 @@
 open System
 open System.Collections.Generic
-let inputs=IO.File.ReadAllLines("test.txt")
+let inputs=IO.File.ReadAllLines("input.txt")
 
 type Template = char[]
 type Insert = ((char * char) * char)
@@ -20,40 +20,52 @@ let (template, inserts) =
     ) (Array.empty, [])
 
 let lookup = inserts |> dict
-let mem = new Dictionary<char,int64>()
 
-//build the count mem
-template
-|> Seq.groupBy(fun c -> c)
-|> Seq.map( fun (c,sq )-> (c, Seq.length sq))
-|> Seq.iter(fun (c, len) -> mem.Add(c, len))
-|> ignore
+let start =
+    [yield! template;'*']
+    |> Seq.pairwise
+    |> Seq.groupBy(fun p -> p)
+    |> Seq.map(fun (k,sq) -> (k, int64 (Seq.length sq)))
 
-let rec proc h t =
-    if Seq.isEmpty h then
-        printfn ("\t%A") (Seq.length t)
-    match t with
-    | x::y::tail when (lookup.ContainsKey (x,y)) ->
-        let toAdd = lookup[(x,y)]
-        if mem.ContainsKey(toAdd) then
-            let org = mem.[toAdd]
-            mem.[toAdd] <- (org + 1L)
-        else
-            mem.Add(toAdd, 1L)
-    
-        proc ([yield! h;x;toAdd]) [y; yield! tail]
-    | x::y::tail -> 
-        proc h [y; yield! tail]
-    | [x] -> 
-        [yield! h;x] 
-    | [] -> h 
+let proc seqPair:seq<(char*char)*int64> =
+    seqPair
+    |> Seq.map(fun (pair,  cnt) -> 
+            if lookup.ContainsKey pair then
+                let ins = lookup[pair]
+                let (x,y) = pair
+                [((x,ins), cnt); ((ins,y), cnt)]
+            else
+                [(pair,cnt)]
+        )
+    |> Seq.collect(fun i -> i)
+    |> Seq.groupBy(fun (p, cnt) -> p)
+    |> Seq.map(fun (k, sq) ->
+        let tlt =
+            sq
+            |> Seq.sumBy(fun (_, cnt) -> cnt)
+        (k,tlt)
+    )
 
-[1..10]
-|> Seq.fold (fun tp _ ->
-    proc List.empty<char> (List.ofSeq tp)
-)  (List.ofArray template)
+let result =
+    [1..40]
+    |> Seq.fold (fun st _ ->
+        proc st
+    )   start
+    |> Seq.map(fun ((x,y), cnt) -> 
+            (x, cnt)
+        )
+    |> Seq.groupBy(fun (x, cnt) -> x)
+    |> Seq.map(fun (x,sq) ->
+        sq
+        |> Seq.map(fun (_, cnt) -> 
+            cnt
+            )
+        |> Seq.sum
+    )
 
-let m = mem.Values|> Seq.max
-let s = mem.Values|> Seq.min
+let m = Seq.max result
+let s = Seq.min result
+
+// let s = mem.Values|> Seq.min
 
 printfn "%A" (m - s)
