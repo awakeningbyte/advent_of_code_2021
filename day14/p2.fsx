@@ -66,6 +66,4 @@ let result =
 let m = Seq.max result
 let s = Seq.min result
 
-// let s = mem.Values|> Seq.min
-
 printfn "%A" (m - s)
